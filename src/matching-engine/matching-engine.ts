@@ -44,12 +44,15 @@ export class MatchingEngine {
     }
   }
 
-  processBuyOrder(order: LimitOrder | MarketOrder) {
+  processOrder(order: LimitOrder | MarketOrder) {
     const matchedList: OrderMatch[] = []
     const updatedOrders: LimitOrder[] = []
 
+    const takeOrderbook = order.side === OrderSide.BID ? this.limitBuyOrders : this.limitSellOrders
+    const makeOrderbook = order.side === OrderSide.BID ? this.limitSellOrders : this.limitBuyOrders
+
     let takeOrder = order
-    for (const makeOrder of this.limitSellOrders) {
+    for (const makeOrder of makeOrderbook) {
       const matched = matchOrder(order, makeOrder)
       if (!matched) {
         break
@@ -71,15 +74,15 @@ export class MatchingEngine {
     // update take orderbook if the take order remains
     if (takeOrder.remaining > 0 && takeOrder.type === OrderType.Limit) {
       // updatedOrders.push(takeOrder)
-      this.limitBuyOrders.replaceOrInsert(takeOrder)
+      takeOrderbook.replaceOrInsert(takeOrder)
     }
 
     // update make orderbook
     for (const updatedOrder of updatedOrders) {
       if (updatedOrder.remaining > 0) {
-        this.limitSellOrders.replaceOrInsert(updatedOrder)
+        makeOrderbook.replaceOrInsert(updatedOrder)
       } else {
-        this.limitSellOrders.remove(updatedOrder)
+        makeOrderbook.remove(updatedOrder)
       }
     }
   }
