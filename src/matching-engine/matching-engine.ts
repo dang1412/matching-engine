@@ -86,4 +86,12 @@ export class MatchingEngine {
       }
     }
   }
+
+  cancelOrder(order: LimitOrder) {
+    if (order.side === OrderSide.BID) {
+      this.limitBuyOrders.remove(order)
+    } else {
+      this.limitSellOrders.remove(order)
+    }
+  }
 }
